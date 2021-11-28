@@ -10,15 +10,14 @@
     * Direct
 * Database
     * Initialization
+    * Models
+    * C&R for Models
 
 ## TODO
 
-* Using models
 * Login
 * Session
 * UI templates
 
 
 ## Not Working
-
-[] Tables are not created in database.

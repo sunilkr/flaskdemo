@@ -1,8 +1,8 @@
 from flask import json
 from flask.json import jsonify
 from flask import Blueprint, request
-from ..models.book import Book
-
+from ..models import Book, User
+from ..db import db
 
 api_bp = Blueprint("api", __name__)
 
@@ -12,28 +12,50 @@ def hello():
 
 @api_bp.route("/user/<id>")
 def get_user(id):
-    #user = User(id=1, username='test', email='test@email.com')
-    return jsonify(None)
+    user = User.query.filter(User.id == int(id)).first()
+    if(user is not None):
+        return jsonify(user.serialize())
+    return jsonify({"error": "Not found"}), 404
+
+
+@api_bp.route("/user/new", methods=["POST"])
+def new_user():
+    input = json.loads(request.data)
+    user = User(**input)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(user.serialize()), 201
+
+
+@api_bp.route("/users", methods=["GET"])
+def get_users():
+    users = User.query.all()
+    return jsonify([u.serialize() for u in users])
+
+
 
 @api_bp.route("/book/<id>")
 def get_book(id):
-    book = Book()
-    book.id = int(id)
-    book.name = "Its a new book"
-    book.isbn = "1"*13
-    return jsonify(book.serialize())
+    book = Book.query.filter(Book.id == int(id)).first()
+    if (book is not None):
+        return jsonify(book.serialize())
+    return jsonify({"error": "Not found"}), 404
+
 
 @api_bp.route("/book/new", methods=["POST"])
 def new_book():
     req_data = json.loads(request.data)
     book = Book()
-    book.id = int(req_data['id'])
     book.isbn = req_data['isbn']
     book.name = req_data['name']
-    book.save()
-    return jsonify(req_data)
+    db.session.add(book)
+    db.session.commit()
+    return jsonify(book.serialize()), 201
+
 
 @api_bp.route("/books", methods=["GET"])
 def get_books():
+    #books = Book.query.all()
     books = Book.query.all()
-    return jsonify(map(lambda b: b.serialize(), books))
+    #return jsonify(list(map(lambda b: b.serialize(), books)))
+    return jsonify([book.serialize() for book in books])
